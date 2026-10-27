@@ -1,0 +1,684 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Orbital Intelligence — ИИ-платформа для анализа космических данных</title>
+<meta name="description" content="Orbital Intelligence превращает спутниковые и орбитальные данные в понятные решения с помощью искусственного интеллекта. Демонстрационная платформа для исследовательских и технологических команд.">
+<link rel="canonical" href="https://daminovroman.github.io/Orbital_Intelligence/AutoSpaceAI">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Orbital Intelligence — ИИ-платформа для анализа космических данных">
+<meta property="og:description" content="Мы превращаем сложные космические данные в интеллектуальные решения с помощью искусственного интеллекта.">
+<meta property="og:image" content="https://daminovroman.github.io/Orbital_Intelligence/img/og-cover.jpg">
+<meta property="og:locale" content="ru_RU">
+<meta name="theme-color" content="#070B18">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ccircle cx='16' cy='16' r='6' fill='%2366E7FF'/%3E%3Ccircle cx='16' cy='16' r='14' fill='none' stroke='%23587CFF' stroke-width='1.5'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="./AutoSpaceAI.css">
+</head>
+<body class="is-loading">
+
+<!-- ============ PRELOADER ============ -->
+<div class="preloader" id="preloader" role="status" aria-live="polite">
+  <div class="preloader__field" aria-hidden="true">
+    <span class="preloader__star"></span><span class="preloader__star"></span><span class="preloader__star"></span>
+    <span class="preloader__star"></span><span class="preloader__star"></span><span class="preloader__star"></span>
+    <span class="preloader__star"></span><span class="preloader__star"></span><span class="preloader__star"></span>
+    <span class="preloader__star"></span><span class="preloader__star"></span><span class="preloader__star"></span>
+  </div>
+
+  <div class="preloader__core">
+    <svg class="preloader__orbits" width="148" height="148" viewBox="0 0 148 148" aria-hidden="true">
+      <ellipse cx="74" cy="74" rx="64" ry="30" class="preloader__ring preloader__ring--a"/>
+      <!-- The 60°/120° base tilt for rings b/c lives on a wrapping <g>,
+           not as a transform on the <ellipse> itself: the CSS spin
+           animation below also sets the "transform" property on the
+           ellipse, and a CSS transform fully replaces an element's own
+           transform attribute rather than composing with it — putting
+           the base tilt one level up avoids that clash entirely. -->
+      <g transform="rotate(60 74 74)">
+        <ellipse cx="74" cy="74" rx="64" ry="30" class="preloader__ring preloader__ring--b"/>
+      </g>
+      <g transform="rotate(120 74 74)">
+        <ellipse cx="74" cy="74" rx="64" ry="30" class="preloader__ring preloader__ring--c"/>
+      </g>
+      <circle cx="74" cy="74" r="9" class="preloader__nucleus"/>
+
+      <!-- Satellites ride their own ring via SMIL animateMotion along an
+           explicit path (rotated to match each ring's transform), rather
+           than CSS offset-path + transform — the CSS combination is
+           unreliable across engines when a static rotate() is layered on
+           top of an offset-path animation, and can leave the dot (and its
+           drop-shadow halo, which reads as a loose "ring" of its own)
+           drifting away from the visible rings entirely. -->
+      <circle r="3.2" fill="var(--starlight-white)" class="preloader__sat preloader__sat--a">
+        <animateMotion dur="5.2s" repeatCount="indefinite"
+          path="M 10,74 A 64 30 0 1 1 138,74 A 64 30 0 1 1 10,74"/>
+      </circle>
+      <circle r="2.4" fill="var(--starlight-white)" class="preloader__sat preloader__sat--b">
+        <animateMotion dur="7.4s" repeatCount="indefinite" keyPoints="1;0" keyTimes="0;1" calcMode="linear"
+          path="M 42,18.574 A 64 30 60 1 1 106,129.426 A 64 30 60 1 1 42,18.574"/>
+      </circle>
+      <circle r="2.8" fill="var(--starlight-white)" class="preloader__sat preloader__sat--c">
+        <animateMotion dur="9.6s" repeatCount="indefinite"
+          path="M 106,18.574 A 64 30 120 1 1 42,129.426 A 64 30 120 1 1 106,18.574"/>
+      </circle>
+    </svg>
+
+    <div class="preloader__readout">
+      <span class="preloader__percent" id="preloaderPercent">0</span><span class="preloader__percent-sign">%</span>
+    </div>
+  </div>
+
+  <div class="preloader__caption">
+    <span class="preloader__label" id="preloaderLabel">Инициализация данных</span>
+    <span class="preloader__bar"><span class="preloader__bar-fill" id="preloaderBarFill"></span></span>
+  </div>
+</div>
+
+<a class="skip-link" href="#main">Перейти к основному содержанию</a>
+
+<!-- ============ SCROLL PROGRESS ============ -->
+<div class="scroll-progress" aria-hidden="true">
+  <div class="scroll-progress__bar" id="scrollProgressBar"></div>
+</div>
+
+<!-- ============ NAVIGATION ============ -->
+<header class="nav" id="siteNav">
+  <div class="nav__inner">
+    <a href="#top" class="nav__logo" aria-label="Orbital Intelligence — на главную">
+      <span class="nav__logo-mark" aria-hidden="true">
+        <svg width="26" height="26" viewBox="0 0 26 26" fill="none">
+          <circle cx="13" cy="13" r="3.4" fill="currentColor"/>
+          <ellipse cx="13" cy="13" rx="11.5" ry="5.6" stroke="currentColor" stroke-width="1" fill="none" opacity="0.55"/>
+          <ellipse cx="13" cy="13" rx="11.5" ry="5.6" stroke="currentColor" stroke-width="1" fill="none" opacity="0.55" transform="rotate(60 13 13)"/>
+          <ellipse cx="13" cy="13" rx="11.5" ry="5.6" stroke="currentColor" stroke-width="1" fill="none" opacity="0.55" transform="rotate(120 13 13)"/>
+        </svg>
+      </span>
+      <span class="nav__logo-text">ORBITAL<br>INTELLIGENCE</span>
+    </a>
+
+    <nav class="nav__links" aria-label="Основная навигация">
+      <a href="#platform">Платформа</a>
+      <a href="#capabilities">Возможности</a>
+      <a href="#technology">Технологии</a>
+      <a href="#applications">Применение</a>
+      <a href="#about">О нас</a>
+    </nav>
+
+    <a href="#cta" class="btn btn--nav">Запросить демонстрацию</a>
+
+    <button class="nav__burger" id="navBurger" aria-expanded="false" aria-controls="mobileMenu" aria-label="Открыть меню">
+      <span></span><span></span><span></span>
+    </button>
+  </div>
+
+  <div class="mobile-menu" id="mobileMenu" hidden>
+    <nav aria-label="Мобильная навигация">
+      <a href="#platform">Платформа</a>
+      <a href="#capabilities">Возможности</a>
+      <a href="#technology">Технологии</a>
+      <a href="#applications">Применение</a>
+      <a href="#about">О нас</a>
+      <a href="#cta" class="btn btn--primary">Запросить демонстрацию</a>
+    </nav>
+  </div>
+</header>
+
+<!-- Scroll-clip wrapper: contains ONLY normal-flow content (main + footer).
+     overflow-x:hidden lives here, not on html/body, so position:fixed
+     elements declared later in this file (modal, ai-chat) stay direct
+     children of <body> and are never affected by it. Some mobile browser
+     engines incorrectly treat overflow-x on html/body as a new containing
+     block for fixed descendants, which breaks their positioning entirely —
+     keeping those elements outside this wrapper avoids that. -->
+<div class="page-scroll-clip">
+<main id="main">
+
+<!-- ============ HERO ============ -->
+<section class="hero" id="top">
+  <div class="hero__scene" aria-hidden="true">
+    <canvas id="heroCanvas"></canvas>
+    <div class="hero__panel hero__panel--a">
+      <span class="hero__panel-label">ОРБИТАЛЬНАЯ СКОРОСТЬ</span>
+      <span class="hero__panel-value">7.66 <small>км/с</small></span>
+      <span class="hero__panel-tag">СИМУЛЯЦИЯ</span>
+    </div>
+    <div class="hero__panel hero__panel--b">
+      <span class="hero__panel-label">ОТСЛЕЖИВАЕМЫЕ ОБЪЕКТЫ</span>
+      <span class="hero__panel-value">1 284</span>
+      <span class="hero__panel-tag">СИМУЛЯЦИЯ</span>
+    </div>
+    <div class="hero__panel hero__panel--c">
+      <span class="hero__panel-label">ДОСТОВЕРНОСТЬ СИГНАЛА</span>
+      <span class="hero__panel-value">94<small>%</small></span>
+      <span class="hero__panel-tag">СИМУЛЯЦИЯ</span>
+    </div>
+  </div>
+
+  <div class="hero__content">
+    <p class="eyebrow hero-intro" data-reveal-chars>Интеллект за пределами Земли</p>
+    <h1 class="hero__title hero-intro" data-reveal-text>Космос становится понятнее с&nbsp;каждым вычислением.</h1>
+    <p class="hero__subtitle hero-intro hero-intro--blur">Мы превращаем сложные космические данные в интеллектуальные решения с помощью искусственного интеллекта.</p>
+    <div class="hero__actions hero-intro">
+      <a href="#cta" class="btn btn--primary magnetic">Запросить демонстрацию</a>
+      <a href="#platform" class="btn btn--ghost">Исследовать платформу</a>
+    </div>
+    <p class="hero__meta hero-intro">ИИ для орбитального анализа · спутниковая аналитика · прогнозирование</p>
+  </div>
+
+  <div class="hero__scroll-cue" aria-hidden="true">
+    <span></span>
+  </div>
+</section>
+
+<!-- ============ PLATFORM ============ -->
+<section class="platform" id="platform">
+  <div class="section-head">
+    <p class="eyebrow" data-reveal-chars>Интеллектуальная платформа</p>
+    <h2 data-reveal-text>Данные — это начало. Понимание — результат.</h2>
+    <p class="section-head__desc" data-reveal="blur">Платформа последовательно проводит информацию через три состояния: от разрозненных сигналов к структурированному знанию, на основе которого можно действовать.</p>
+  </div>
+
+  <div class="stages" data-reveal="scale">
+    <div class="stages__rail" role="tablist" aria-label="Этапы обработки данных">
+      <button class="stage-btn is-active" role="tab" aria-selected="true" aria-controls="stage-panel" data-stage="collect">
+        <span class="stage-btn__index">01</span>
+        <span class="stage-btn__title">Сбор</span>
+        <span class="stage-btn__desc">Получение и объединение данных</span>
+      </button>
+      <button class="stage-btn" role="tab" aria-selected="false" aria-controls="stage-panel" data-stage="analyze">
+        <span class="stage-btn__index">02</span>
+        <span class="stage-btn__title">Анализ</span>
+        <span class="stage-btn__desc">ИИ-обработка и построение прогнозов</span>
+      </button>
+      <button class="stage-btn" role="tab" aria-selected="false" aria-controls="stage-panel" data-stage="discover">
+        <span class="stage-btn__index">03</span>
+        <span class="stage-btn__title">Открытие</span>
+        <span class="stage-btn__desc">Визуализация и поддержка решений</span>
+      </button>
+    </div>
+
+    <div class="stages__stage" id="stage-panel" role="tabpanel">
+      <div class="stages__visual">
+        <svg id="stageSvg" viewBox="0 0 400 400" aria-hidden="true">
+          <circle cx="200" cy="200" r="150" class="stage-ring stage-ring--outer"/>
+          <circle cx="200" cy="200" r="100" class="stage-ring stage-ring--mid"/>
+          <circle cx="200" cy="200" r="55" class="stage-ring stage-ring--inner"/>
+          <g id="stageNodes"></g>
+          <g id="stageLines"></g>
+        </svg>
+      </div>
+      <div class="stages__text">
+        <h3 id="stageTitle">Сбор</h3>
+        <p id="stageDesc">Платформа объединяет сигналы спутников, телескопов и наземных станций в единый поток данных, синхронизированный по времени и координатам.</p>
+        <ul id="stageList">
+          <li>Приём телеметрии в реальном времени</li>
+          <li>Нормализация разнородных форматов</li>
+          <li>Пространственно-временная синхронизация</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ CAPABILITIES ============ -->
+<section class="capabilities" id="capabilities">
+  <div class="section-head">
+    <p class="eyebrow" data-reveal-chars>Возможности ИИ</p>
+    <h2 data-reveal-text>Интеллект, созданный для сложных систем.</h2>
+  </div>
+
+  <div class="cap-grid" data-reveal-group>
+    <article class="cap-card cap-card--lg">
+      <div class="cap-card__visual" data-parallax="0.05">
+        <svg viewBox="0 0 200 140" aria-hidden="true">
+          <path d="M10,110 Q70,20 190,60" class="cap-path"/>
+          <path d="M10,90 Q90,100 190,30" class="cap-path cap-path--alt"/>
+          <circle cx="10" cy="110" r="3" class="cap-dot"/>
+          <circle cx="190" cy="60" r="3" class="cap-dot"/>
+        </svg>
+      </div>
+      <h3>Орбитальный интеллект</h3>
+      <p>Анализ траекторий и моделирование движения объектов на орбите, с учётом гравитационных возмущений и сближений.</p>
+    </article>
+
+    <article class="cap-card">
+      <div class="cap-card__visual cap-card__visual--signal" data-parallax="0.04">
+        <svg viewBox="0 0 160 100" aria-hidden="true">
+          <path d="M5,70 L30,70 L40,30 L55,90 L70,50 L85,70 L155,70" class="cap-signal"/>
+        </svg>
+      </div>
+      <h3>Спутниковая аналитика</h3>
+      <p>Интеллектуальная обработка спутниковых данных: фильтрация шума, выделение значимых сигналов, агрегация по объектам.</p>
+    </article>
+
+    <article class="cap-card">
+      <div class="cap-card__visual cap-card__visual--grid" data-parallax="0.04">
+        <svg viewBox="0 0 160 100" aria-hidden="true">
+          <g class="cap-grid-dots">
+            <circle cx="20" cy="20" r="2"/><circle cx="60" cy="20" r="2"/><circle cx="100" cy="20" r="2"/><circle cx="140" cy="20" r="2"/>
+            <circle cx="20" cy="50" r="2"/><circle cx="60" cy="50" r="3.5" class="cap-grid-dots--hot"/><circle cx="100" cy="50" r="2"/><circle cx="140" cy="50" r="2"/>
+            <circle cx="20" cy="80" r="2"/><circle cx="60" cy="80" r="2"/><circle cx="100" cy="80" r="2.8" class="cap-grid-dots--warm"/><circle cx="140" cy="80" r="2"/>
+          </g>
+        </svg>
+      </div>
+      <h3>Прогнозные системы</h3>
+      <p>Построение прогнозных моделей на основе доступной информации для оценки вероятных сценариев развития событий.</p>
+    </article>
+
+    <article class="cap-card cap-card--wide">
+      <div class="cap-card__visual cap-card__visual--cluster" data-parallax="0.04">
+        <svg viewBox="0 0 220 100" aria-hidden="true">
+          <g class="cap-cluster">
+            <circle cx="40" cy="50" r="4"/><circle cx="60" cy="35" r="3"/><circle cx="55" cy="68" r="2.5"/>
+            <circle cx="120" cy="40" r="3.5"/><circle cx="135" cy="60" r="2.5"/><circle cx="150" cy="30" r="3"/>
+            <circle cx="180" cy="55" r="4"/><circle cx="195" cy="40" r="2.5"/>
+            <path d="M40,50 L60,35 M60,35 L55,68 M120,40 L135,60 M135,60 L150,30 M180,55 L195,40" class="cap-cluster-line"/>
+          </g>
+        </svg>
+      </div>
+      <h3>Научные открытия</h3>
+      <p>Выявление скрытых закономерностей в больших наборах научных данных, которые сложно обнаружить вручную.</p>
+    </article>
+  </div>
+</section>
+
+<!-- ============ INTERACTIVE SIMULATION ============ -->
+<section class="simulation" id="simulation">
+  <div class="section-head">
+    <p class="eyebrow" data-reveal-chars>Интерактивная модель</p>
+    <h2 data-reveal-text>Орбитальная система в реальном времени.</h2>
+    <p class="section-head__desc" data-reveal="blur">Выберите спутник, чтобы увидеть его траекторию и демонстрационные параметры движения.</p>
+  </div>
+
+  <div class="sim-shell" data-reveal="scale">
+    <div class="sim-stage">
+      <canvas id="simCanvas" role="img" aria-label="Интерактивная симуляция орбитальной системы со спутниками"></canvas>
+      <span class="sim-badge">СИМУЛЯЦИЯ ОРБИТАЛЬНЫХ ДАННЫХ</span>
+      <button class="sim-pause" id="simPause" type="button" aria-pressed="false">
+        <svg id="simPauseIcon" width="16" height="16" viewBox="0 0 16 16" aria-hidden="true">
+          <rect x="3" y="2" width="3.4" height="12" rx="0.8"/><rect x="9.6" y="2" width="3.4" height="12" rx="0.8"/>
+        </svg>
+        <span id="simPauseLabel">Пауза</span>
+      </button>
+    </div>
+
+    <div class="sim-panel">
+      <h3 class="sim-panel__title">Выбор объекта</h3>
+      <div class="sim-objects" id="simObjects" role="listbox" aria-label="Список спутников"></div>
+
+      <div class="sim-readout" id="simReadout" aria-live="polite">
+        <p class="sim-readout__hint">Выберите спутник на схеме или в списке</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ TECHNOLOGY ============ -->
+<section class="technology" id="technology">
+  <div class="section-head">
+    <p class="eyebrow" data-reveal-chars>Технологии</p>
+    <h2 data-reveal-text>Сложность системы. Ясность результата.</h2>
+  </div>
+
+  <div class="tech-layout">
+    <div class="tech-points" data-reveal-group>
+      <div class="tech-point">
+        <h4>Интеллектуальная обработка данных</h4>
+        <p>Модели выделяют значимые паттерны из разнородных источников и приводят их к единому представлению.</p>
+      </div>
+      <div class="tech-point">
+        <h4>Модульная архитектура</h4>
+        <p>Компоненты платформы независимы и могут подключаться под конкретную исследовательскую задачу.</p>
+      </div>
+      <div class="tech-point">
+        <h4>Визуальная аналитика</h4>
+        <p>Результаты представлены в виде, который можно изучать интерактивно, а не только читать в отчёте.</p>
+      </div>
+      <div class="tech-point">
+        <h4>Моделирование сценариев</h4>
+        <p>Платформа позволяет проверять гипотезы на основе изменяемых параметров входных данных.</p>
+      </div>
+      <div class="tech-point">
+        <h4>Масштабируемая инфраструктура</h4>
+        <p>Архитектура рассчитана на рост объёма данных без потери скорости отклика интерфейса.</p>
+      </div>
+    </div>
+
+    <div class="tech-pipeline" data-reveal="right">
+      <div class="pipeline" role="tablist" aria-label="Архитектура обработки данных">
+        <button class="pipeline__step is-active" role="tab" aria-selected="true" data-step="0">
+          <span class="pipeline__dot"></span>
+          <span class="pipeline__label">ВВОД ДАННЫХ</span>
+        </button>
+        <button class="pipeline__step" role="tab" aria-selected="false" data-step="1">
+          <span class="pipeline__dot"></span>
+          <span class="pipeline__label">ОБРАБОТКА ИИ</span>
+        </button>
+        <button class="pipeline__step" role="tab" aria-selected="false" data-step="2">
+          <span class="pipeline__dot"></span>
+          <span class="pipeline__label">АНАЛИТИЧЕСКИЙ МОДУЛЬ</span>
+        </button>
+        <button class="pipeline__step" role="tab" aria-selected="false" data-step="3">
+          <span class="pipeline__dot"></span>
+          <span class="pipeline__label">ГОТОВЫЕ ВЫВОДЫ</span>
+        </button>
+      </div>
+      <p class="pipeline__desc" id="pipelineDesc" aria-live="polite">Необработанные данные со спутников, телескопов и наземных станций поступают в систему в исходном виде.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ============ APPLICATIONS ============ -->
+<section class="applications" id="applications">
+  <div class="section-head">
+    <p class="eyebrow" data-reveal-chars>Применение</p>
+    <h2 data-reveal-text>Для тех, кто работает со сложными системами.</h2>
+  </div>
+
+  <div class="app-list" data-reveal-group>
+    <article class="app-row">
+      <div class="app-row__visual">
+        <svg viewBox="0 0 120 120" aria-hidden="true"><circle cx="60" cy="60" r="44" class="app-ring"/><circle cx="60" cy="60" r="44" class="app-ring app-ring--dash"/><circle cx="60" cy="16" r="4" class="app-node"/></svg>
+      </div>
+      <div class="app-row__text">
+        <h3>Космические технологические компании</h3>
+        <p>Сокращение времени анализа орбитальных данных и раннее выявление отклонений в поведении объектов.</p>
+      </div>
+    </article>
+
+    <article class="app-row">
+      <div class="app-row__visual">
+        <svg viewBox="0 0 120 120" aria-hidden="true"><rect x="30" y="30" width="60" height="60" class="app-square" rx="2"/><line x1="30" y1="50" x2="90" y2="50" class="app-line"/><line x1="30" y1="70" x2="90" y2="70" class="app-line"/><line x1="50" y1="30" x2="50" y2="90" class="app-line"/></svg>
+      </div>
+      <div class="app-row__text">
+        <h3>Разработчики спутниковых систем</h3>
+        <p>Проверка моделей поведения спутника на этапе проектирования с помощью симулируемых сценариев.</p>
+      </div>
+    </article>
+
+    <article class="app-row">
+      <div class="app-row__visual">
+        <svg viewBox="0 0 120 120" aria-hidden="true"><path d="M20,90 L45,40 L65,65 L80,30 L100,55" class="app-wave"/></svg>
+      </div>
+      <div class="app-row__text">
+        <h3>Исследовательские лаборатории</h3>
+        <p>Выявление закономерностей в больших массивах наблюдений без ручной предобработки данных.</p>
+      </div>
+    </article>
+
+    <article class="app-row">
+      <div class="app-row__visual">
+        <svg viewBox="0 0 120 120" aria-hidden="true"><circle cx="40" cy="45" r="5" class="app-geo"/><circle cx="75" cy="35" r="5" class="app-geo"/><circle cx="60" cy="75" r="5" class="app-geo"/><circle cx="90" cy="70" r="5" class="app-geo"/><path d="M40,45 L75,35 L90,70 L60,75 Z" class="app-geo-line"/></svg>
+      </div>
+      <div class="app-row__text">
+        <h3>Организации с геопространственными данными</h3>
+        <p>Объединение разрозненных источников координатных данных в единую интерактивную карту.</p>
+      </div>
+    </article>
+
+    <article class="app-row">
+      <div class="app-row__visual">
+        <svg viewBox="0 0 120 120" aria-hidden="true"><path d="M20,80 L40,60 L55,70 L75,35 L100,45" class="app-chart"/><circle cx="75" cy="35" r="3.5" class="app-chart-dot"/></svg>
+      </div>
+      <div class="app-row__text">
+        <h3>Инженерные и аналитические команды</h3>
+        <p>Общий интерфейс для изучения данных, где инженеры и аналитики работают с одной версией истины.</p>
+      </div>
+    </article>
+  </div>
+</section>
+
+<!-- ============ PRODUCT INTERFACE ============ -->
+<section class="interface" id="interface">
+  <div class="section-head">
+    <p class="eyebrow" data-reveal-chars>Интерфейс продукта</p>
+    <h2 data-reveal-text>Один экран для всей картины.</h2>
+  </div>
+
+  <div class="ui-mock" data-reveal="scale">
+    <div class="ui-mock__topbar">
+      <span class="ui-mock__dot"></span>
+      <span class="ui-mock__dot"></span>
+      <span class="ui-mock__dot"></span>
+      <span class="ui-mock__title">research-console · orbital-intelligence.app</span>
+      <span class="ui-mock__status"><i></i>Обработка данных: активна</span>
+    </div>
+    <div class="ui-mock__body">
+      <aside class="ui-mock__sidebar">
+        <p class="ui-mock__sidebar-label">Объекты</p>
+        <div class="ui-mock__item is-active"><span>OI-0142</span><small>LEO · активен</small></div>
+        <div class="ui-mock__item"><span>OI-0098</span><small>MEO · активен</small></div>
+        <div class="ui-mock__item"><span>OI-0233</span><small>GEO · наблюдение</small></div>
+        <div class="ui-mock__item"><span>OI-0071</span><small>LEO · архив</small></div>
+        <p class="ui-mock__sidebar-label">Фильтры</p>
+        <div class="ui-mock__filter"><span>Высота орбиты</span></div>
+        <div class="ui-mock__filter"><span>Класс объекта</span></div>
+        <div class="ui-mock__filter"><span>Период наблюдения</span></div>
+      </aside>
+
+      <div class="ui-mock__main">
+        <div class="ui-mock__chart">
+          <svg viewBox="0 0 400 140" preserveAspectRatio="none" aria-hidden="true">
+            <polyline points="0,100 40,80 80,90 120,50 160,65 200,30 240,45 280,20 320,35 360,15 400,25" class="ui-mock__line"/>
+            <polyline points="0,120 40,115 80,118 120,100 160,105 200,90 240,95 280,85 320,88 360,80 400,82" class="ui-mock__line ui-mock__line--alt"/>
+          </svg>
+        </div>
+        <div class="ui-mock__feed">
+          <p class="ui-mock__sidebar-label">Лента событий</p>
+          <div class="ui-mock__event"><span class="ui-mock__event-time">14:02</span>Отклонение траектории OI-0142 зафиксировано</div>
+          <div class="ui-mock__event"><span class="ui-mock__event-time">13:47</span>Обновлена модель прогноза для сектора 7</div>
+          <div class="ui-mock__event"><span class="ui-mock__event-time">13:12</span>Синхронизация данных наземной станции завершена</div>
+        </div>
+      </div>
+    </div>
+    <p class="ui-mock__disclaimer">Интерфейс демонстрационный. Все данные являются симулированными.</p>
+  </div>
+</section>
+
+<!-- ============ TRUST & APPROACH ============ -->
+<section class="trust" id="about">
+  <div class="section-head">
+    <p class="eyebrow" data-reveal-chars>Подход</p>
+    <h2 data-reveal-text>Технологии должны объяснять, а не усложнять.</h2>
+  </div>
+
+  <div class="trust-grid" data-reveal-group>
+    <div class="trust-item">
+      <h3>Понятная визуализация</h3>
+      <p>Сложные данные представлены так, чтобы их можно было прочитать без дополнительной подготовки.</p>
+    </div>
+    <div class="trust-item">
+      <h3>Прозрачность моделей</h3>
+      <p>Предположения и ограничения каждой модели видны и доступны для изучения, а не скрыты внутри системы.</p>
+    </div>
+    <div class="trust-item">
+      <h3>Разделение уровней знания</h3>
+      <p>Наблюдения, прогнозы и гипотезы визуально разделены, чтобы не смешивать факт и предположение.</p>
+    </div>
+    <div class="trust-item">
+      <h3>Доступ к исходным параметрам</h3>
+      <p>Пользователь может изучить данные, на основе которых построен тот или иной вывод платформы.</p>
+    </div>
+    <div class="trust-item">
+      <h3>Контроль над процессом</h3>
+      <p>Исследователь определяет, какие данные анализировать и как интерпретировать результат, а не платформа.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ============ FINAL CTA ============ -->
+<section class="final-cta" id="cta">
+  <canvas id="ctaCanvas" aria-hidden="true"></canvas>
+  <div class="final-cta__content">
+    <p class="eyebrow" data-reveal-chars>Начните здесь</p>
+    <h2 data-reveal-text>Следующее открытие начинается с&nbsp;правильного вопроса.</h2>
+    <p class="final-cta__subtitle" data-reveal="blur">Посмотрите, как искусственный интеллект может изменить работу с космическими данными.</p>
+    <div class="hero__actions" data-reveal="scale">
+      <button class="btn btn--primary magnetic" id="openDemoModal" type="button">Запросить демонстрацию</button>
+      <a href="#applications" class="btn btn--ghost">Обсудить проект</a>
+    </div>
+  </div>
+</section>
+
+</main>
+
+<!-- ============ FOOTER ============ -->
+<footer class="footer">
+  <div class="footer__top" data-reveal>
+    <div class="footer__brand">
+      <a href="#top" class="nav__logo nav__logo--footer" aria-label="Orbital Intelligence — на главную">
+        <span class="nav__logo-mark" aria-hidden="true">
+          <svg width="22" height="22" viewBox="0 0 26 26" fill="none">
+            <circle cx="13" cy="13" r="3.4" fill="currentColor"/>
+            <ellipse cx="13" cy="13" rx="11.5" ry="5.6" stroke="currentColor" stroke-width="1" fill="none" opacity="0.55"/>
+            <ellipse cx="13" cy="13" rx="11.5" ry="5.6" stroke="currentColor" stroke-width="1" fill="none" opacity="0.55" transform="rotate(60 13 13)"/>
+            <ellipse cx="13" cy="13" rx="11.5" ry="5.6" stroke="currentColor" stroke-width="1" fill="none" opacity="0.55" transform="rotate(120 13 13)"/>
+          </svg>
+        </span>
+        <span class="nav__logo-text">ORBITAL<br>INTELLIGENCE</span>
+      </a>
+      <p class="footer__desc">Демонстрационная ИИ-платформа для анализа космических и спутниковых данных. Концептуальный проект.</p>
+    </div>
+
+    <nav class="footer__col" aria-label="Навигация по разделам">
+      <p class="footer__col-title">Разделы</p>
+      <a href="#platform">Платформа</a>
+      <a href="#capabilities">Возможности</a>
+      <a href="#technology">Технологии</a>
+      <a href="#applications">Применение</a>
+      <a href="#about">О нас</a>
+    </nav>
+
+    <div class="footer__col">
+      <p class="footer__col-title">Контакты</p>
+      <a href="mailto:hello@orbital-intelligence.example">hello@orbital-intelligence.example</a>
+      <span class="footer__note">Демонстрационный адрес — заменить перед запуском</span>
+    </div>
+
+    <div class="footer__col">
+      <p class="footer__col-title">Социальные сети</p>
+      <a href="#" class="footer__demo-link">X / Twitter <small>(демо-ссылка)</small></a>
+      <a href="#" class="footer__demo-link">LinkedIn <small>(демо-ссылка)</small></a>
+      <a href="#" class="footer__demo-link">GitHub <small>(демо-ссылка)</small></a>
+    </div>
+  </div>
+
+  <div class="footer__bottom">
+    <span>© <span id="footerYear">2026</span> Orbital Intelligence. Концептуальный проект.</span>
+    <div class="footer__legal">
+      <a href="#" class="footer__demo-link">Политика конфиденциальности <small>(демо)</small></a>
+      <a href="#" class="footer__demo-link">Условия использования <small>(демо)</small></a>
+    </div>
+  </div>
+</footer>
+</div><!-- /.page-scroll-clip -->
+
+<!-- ============ DEMO MODAL ============ -->
+<div class="modal-overlay" id="modalOverlay" hidden>
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle" id="demoModal">
+    <button class="modal__close" id="modalClose" type="button" aria-label="Закрыть форму">
+      <svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="true"><path d="M2,2 L16,16 M16,2 L2,16" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+    </button>
+
+    <div class="modal__inner" id="modalFormView">
+      <p class="eyebrow">Запросить демонстрацию</p>
+      <h2 id="modalTitle">Запросить демонстрацию</h2>
+      <p class="modal__desc">Это демонстрационная форма. Реального бэкенда нет — отправка эмулируется локально, данные никуда не передаются.</p>
+
+      <form id="demoForm" novalidate>
+        <div class="field">
+          <label for="fieldName">Имя</label>
+          <input type="text" id="fieldName" name="name" autocomplete="name" aria-describedby="err-name">
+          <span class="field__error" id="err-name" role="alert"></span>
+        </div>
+
+        <div class="field">
+          <label for="fieldEmail">Рабочий email</label>
+          <input type="email" id="fieldEmail" name="email" autocomplete="email" aria-describedby="err-email">
+          <span class="field__error" id="err-email" role="alert"></span>
+        </div>
+
+        <div class="field">
+          <label for="fieldCompany">Компания</label>
+          <input type="text" id="fieldCompany" name="company" autocomplete="organization" aria-describedby="err-company">
+          <span class="field__error" id="err-company" role="alert"></span>
+        </div>
+
+        <div class="field">
+          <label for="fieldMessage">Задача или сообщение</label>
+          <textarea id="fieldMessage" name="message" rows="4" aria-describedby="err-message"></textarea>
+          <span class="field__error" id="err-message" role="alert"></span>
+        </div>
+
+        <button type="submit" class="btn btn--primary btn--block">Отправить запрос</button>
+        <p class="modal__demo-tag">ДЕМО-РЕЖИМ · форма не отправляется на сервер</p>
+      </form>
+    </div>
+
+    <div class="modal__inner modal__success" id="modalSuccessView" hidden>
+      <div class="modal__success-icon" aria-hidden="true">
+        <svg width="40" height="40" viewBox="0 0 40 40"><circle cx="20" cy="20" r="18" stroke="currentColor" stroke-width="1.4" fill="none"/><path d="M12,20 L18,26 L29,14" stroke="currentColor" stroke-width="1.8" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </div>
+      <h2>Запрос зафиксирован</h2>
+      <p class="modal__desc">Это демонстрационное состояние успеха. В реальном продукте здесь будет подтверждение отправки на сервер и информация о следующем шаге.</p>
+      <button type="button" class="btn btn--ghost" id="modalReset">Закрыть</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============ AI CHAT WIDGET ============ -->
+<div class="ai-chat" id="aiChat">
+  <button type="button" class="ai-chat__launcher" id="aiChatLauncher" aria-expanded="false" aria-controls="aiChatPanel">
+    <span class="ai-chat__launcher-icon ai-chat__launcher-icon--open" aria-hidden="true">
+      <svg width="22" height="22" viewBox="0 0 22 22" fill="none"><path d="M3,6.5 C3,5.1 4.1,4 5.5,4 L16.5,4 C17.9,4 19,5.1 19,6.5 L19,13 C19,14.4 17.9,15.5 16.5,15.5 L9,15.5 L5,18.5 L5,15.5 L5.5,15.5 C4.1,15.5 3,14.4 3,13 Z" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/><circle cx="7.8" cy="9.8" r="1" fill="currentColor"/><circle cx="11" cy="9.8" r="1" fill="currentColor"/><circle cx="14.2" cy="9.8" r="1" fill="currentColor"/></svg>
+    </span>
+    <span class="ai-chat__launcher-icon ai-chat__launcher-icon--close" aria-hidden="true">
+      <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M2,2 L16,16 M16,2 L2,16" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/></svg>
+    </span>
+    <span class="ai-chat__launcher-ping" aria-hidden="true"></span>
+    <span class="visually-hidden">Открыть ИИ-ассистента</span>
+  </button>
+
+  <section class="ai-chat__panel" id="aiChatPanel" role="dialog" aria-modal="false" aria-labelledby="aiChatTitle" hidden>
+    <header class="ai-chat__header">
+      <div class="ai-chat__header-id">
+        <span class="ai-chat__avatar" aria-hidden="true">
+          <svg width="18" height="18" viewBox="0 0 26 26" fill="none">
+            <circle cx="13" cy="13" r="3.4" fill="currentColor"/>
+            <ellipse cx="13" cy="13" rx="11.5" ry="5.6" stroke="currentColor" stroke-width="1" fill="none" opacity="0.55"/>
+            <ellipse cx="13" cy="13" rx="11.5" ry="5.6" stroke="currentColor" stroke-width="1" fill="none" opacity="0.55" transform="rotate(60 13 13)"/>
+            <ellipse cx="13" cy="13" rx="11.5" ry="5.6" stroke="currentColor" stroke-width="1" fill="none" opacity="0.55" transform="rotate(120 13 13)"/>
+          </svg>
+        </span>
+        <div class="ai-chat__header-text">
+          <h2 id="aiChatTitle">Орбитальный ассистент</h2>
+          <p><i class="ai-chat__status-dot" aria-hidden="true"></i>Демо-режим</p>
+        </div>
+      </div>
+      <button type="button" class="ai-chat__close" id="aiChatClose" aria-label="Закрыть чат">
+        <svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true"><path d="M2,2 L14,14 M14,2 L2,14" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+      </button>
+    </header>
+
+    <div class="ai-chat__messages" id="aiChatMessages" role="log" aria-live="polite" aria-label="История чата">
+      <!-- messages injected here; seeded greeting + suggestion chips added by JS -->
+    </div>
+
+    <form class="ai-chat__composer" id="aiChatForm">
+      <label for="aiChatInput" class="visually-hidden">Сообщение ассистенту</label>
+      <textarea id="aiChatInput" name="message" rows="1" placeholder="Сообщение…" autocomplete="off"></textarea>
+      <button type="submit" class="ai-chat__send" id="aiChatSend" aria-label="Отправить сообщение">
+        <svg width="17" height="17" viewBox="0 0 17 17" fill="none" aria-hidden="true"><path d="M2,15 L15,8.5 L2,2 L2,7 L10,8.5 L2,10 Z" fill="currentColor"/></svg>
+      </button>
+    </form>
+    <p class="ai-chat__demo-tag">ДЕМО-РЕЖИМ · ответы симулируются локально</p>
+  </section>
+</div>
+
+<script src="./AutoSpaceAI.js"></script>
+</body>
+</html>
